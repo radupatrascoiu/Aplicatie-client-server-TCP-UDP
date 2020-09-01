@@ -1,0 +1,45 @@
+// Patrascoiu Ion - Radu, 322CD
+
+    In implementarea temei, am folosit structuri de mesaje si map-uri pentru a
+stoca informatiile necesare cat mai eficient posibil, astfel:
+    - messages_topic_queue, care retine id-ul unui client si un vector de
+de mesaje, care functioneaza ca o coada;
+    - subscribers_topic_connected, care retine topicul si clientii abonati la
+acesta;
+    - client_to_socket, care face legatura intre id-ul clientului si file
+file descriptorul acestuia;
+    - clients, care clientii nou conectati;
+    - abonamente_per_client, care retine id-ul unui client si un vector de
+perechi, in care se retin numele topicului si SF-ul.
+
+    Am folosit multiplexarea I/O pentru a putea gestiona inputurilor ce ajung
+la server. Astfel, am creat socketi pentru conexiunea cu clientii TCP, cat si
+pentru conexiunea cu UDP. Cel TCP este pasiv, ascultand noi cereri de
+conexiuni.
+
+    Serverul primeste mesajele de la clientii UDP, le converteste in formatul
+din enunt si le transmite mai departe catre clientii TCP abonati la un anumit
+topic. Daca clientul este inactiv, dar are SF setat pe 1, atunci mesajele sunt
+adaugate intr-o coada.
+
+    Atunci cand se primeste o comanda de la un client TCP, verifica ce fel de
+comanda este: 'subscribe' sau 'unsubscribe'. Daca este cel dintai, atunci 
+adauga mesajul in subscribers_topic_connected si topicuri si
+abonamente_per_client. Daca este 'unsubscribe', se sterge din map-ul
+subscribers_topic_connected clientul. Daca s-a primit 0, inseamna ca un client
+s-a deconectat si i se atribuie un socket negativ.
+
+    Daca serverul primeste comanda 'exit' acesta va trimite mesaje la toti
+totii clientii pentru "a le spune" sa se deconecteze, iar apoi se inchide si
+pe el.
+
+    In subscriber, se creaza un socket de comunicare cu serverul si se
+multiplexeaza comenzile de 'subscribe', 'unsubscribe' sau 'exit'. Se parseaza
+mesajul primit de la server si in functie de comenzile primite afiseaza mesaje
+corespunzatoare si se transmite inapoi catre servel un mesaj. In caz ca primeste
+ca si type in mesaj "end", atunci se inchide conexiunea, asa cum i-a cerut
+serverul. Altfel se afiseaza informatiile primite, conform enuntului.
+
+    Am tratat majoritatea codurilor de eroare, atat la input cat si pentru
+socketi, afisand mesaje corespunzatoare.
+Programul indeplineste toate ceritele propuse, inclusiv store&forward.
